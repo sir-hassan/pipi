@@ -81,11 +81,11 @@ func createHandler(logger log.Logger) func(w http.ResponseWriter, r *http.Reques
 		defer res.Body.Close()
 
 		parsingMap := map[string][]HtmlNode{
-			"title":        {{1, "div"}, {2, "div"}, {2, "div"}, {1, "div"}, {1, "h1"}, {1, "text"}},
-			"release_year": {{1, "div"}, {2, "div"}, {4, "span"}, {1, "span"}, {1, "text"}},
-			"actor":        {{1, "div"}, {4, "div"}, {1, "div"}, {1, "div"}, {2, "dl"}, {2, "dd"}, {0, "a"}, {1, "text"}},
-			"similar_ids":  {{1, "ul"}, {0, "li"}, {1, "div"}, {1, "div"}, {1, "a"}},
-			"poster":       {{6, "img"}},
+			"title":        {{Branch: 1, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "h1"}, {Branch: 1, Tag: "text"}},
+			"release_year": {{Branch: 1, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 4, Tag: "span"}, {Branch: 1, Tag: "span"}, {Branch: 1, Tag: "text"}},
+			"actor":        {{Branch: 1, Tag: "div"}, {Branch: 4, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 2, Tag: "dl"}, {Branch: 2, Tag: "dd"}, {Branch: 0, Tag: "a"}, {Branch: 1, Tag: "text"}},
+			"similar_ids":  {{Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "a"}},
+			"poster":       {{Branch: 6, Tag: "img"}},
 		}
 		parsedTokens, err := HtmlTraverse(res.Body, parsingMap)
 		if err != nil {
