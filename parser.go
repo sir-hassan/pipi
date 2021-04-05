@@ -3,6 +3,7 @@ package main
 import (
 	"golang.org/x/net/html"
 	"io"
+	"strings"
 )
 
 type HtmlNode struct {
@@ -31,6 +32,9 @@ func HtmlTraverse(input io.Reader, searchingMap map[string][]HtmlNode) (map[stri
 		case tokenType == html.ErrorToken:
 			return nil, z.Err()
 		case tokenType == html.StartTagToken || tokenType == html.TextToken || tokenType == html.SelfClosingTagToken:
+			if tokenType == html.TextToken && strings.TrimSpace(token.Data) == "" {
+				continue
+			}
 			currentPath = append(currentPath, HtmlNode{Branch: lastBranch + 1, Token: token})
 			lastBranch = 0
 

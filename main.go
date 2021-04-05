@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
@@ -85,7 +84,7 @@ func createHandler(logger log.Logger) func(w http.ResponseWriter, r *http.Reques
 			"release_year": {{Branch: 1, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 4, Tag: "span"}, {Branch: 1, Tag: "span"}, {Branch: 1, Tag: "text"}},
 			"actor":        {{Branch: 1, Tag: "div"}, {Branch: 4, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 2, Tag: "dl"}, {Branch: 2, Tag: "dd"}, {Branch: 0, Tag: "a"}, {Branch: 1, Tag: "text"}},
 			"similar_ids":  {{Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "a"}},
-			"poster":       {{Branch: 6, Tag: "img"}},
+			"poster":       {{Branch: 1, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 3, Tag: "img"}},
 		}
 		parsedTokens, err := HtmlTraverse(res.Body, parsingMap)
 		if err != nil {
@@ -131,7 +130,6 @@ func newReply(parsedTokens map[string][]html.Token) Reply {
 				similarID := parseAmazonID(getAttr(token.Attr, "href"))
 				reply.SimilarIDs = append(reply.SimilarIDs, similarID)
 			case "poster":
-				fmt.Printf("attr: %v\n", token.Attr)
 				reply.Poster = getAttr(token.Attr, "src")
 			}
 		}
