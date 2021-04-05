@@ -25,11 +25,11 @@ func TestHtmlTraverse(t *testing.T) {
 	</body>
 </html>`
 	input := strings.NewReader(html)
-	parsingMap := map[string][]HtmlNode{
+	searchingMap := map[string][]HtmlNode{
 		"text":  {{Branch: 2, Tag: "body"}, {Branch: 3, Tag: "p"}},
 		"items": {{Branch: 2, Tag: "div"}, {Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}},
 	}
-	parsedTokens, err := HtmlTraverse(input, parsingMap)
+	parsedTokens, err := HtmlTraverse(input, searchingMap)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}
@@ -62,10 +62,10 @@ func TestHtmlTraverseBranchSelection(t *testing.T) {
 	</body>
 </html>`
 	input := strings.NewReader(html)
-	parsingMap := map[string][]HtmlNode{
+	searchingMap := map[string][]HtmlNode{
 		"onlySecondItem": {{Branch: 2, Tag: "div"}, {Branch: 1, Tag: "ul"}, {Branch: 2, Tag: "li"}},
 	}
-	parsedTokens, err := HtmlTraverse(input, parsingMap)
+	parsedTokens, err := HtmlTraverse(input, searchingMap)
 	if err != nil {
 		t.Errorf("unexpected error: %s", err)
 	}

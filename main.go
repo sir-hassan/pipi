@@ -79,14 +79,14 @@ func createHandler(logger log.Logger) func(w http.ResponseWriter, r *http.Reques
 		}
 		defer res.Body.Close()
 
-		parsingMap := map[string][]HtmlNode{
+		searchingMap := map[string][]HtmlNode{
 			"title":        {{Branch: 1, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "h1"}, {Branch: 1, Tag: "text"}},
 			"release_year": {{Branch: 1, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 4, Tag: "span"}, {Branch: 1, Tag: "span"}, {Branch: 1, Tag: "text"}},
 			"actor":        {{Branch: 1, Tag: "div"}, {Branch: 4, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 2, Tag: "dl"}, {Branch: 2, Tag: "dd"}, {Branch: 0, Tag: "a"}, {Branch: 1, Tag: "text"}},
 			"similar_ids":  {{Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "a"}},
 			"poster":       {{Branch: 1, Tag: "div"}, {Branch: 2, Tag: "div"}, {Branch: 3, Tag: "img"}},
 		}
-		parsedTokens, err := HtmlTraverse(res.Body, parsingMap)
+		parsedTokens, err := HtmlTraverse(res.Body, searchingMap)
 		if err != nil {
 			level.Error(logger).Log("msg", "parsing", "error", err)
 			writeReply(logger, w, 500, "internal server error")
