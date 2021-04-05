@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
+	"golang.org/x/net/html"
 	"net"
 	"net/http"
 	"os"
@@ -14,6 +17,14 @@ import (
 )
 
 const apiPort = 8080
+
+type Reply struct {
+	Title       string   `json:"title"`
+	ReleaseYear int      `json:"release_year"`
+	Actors      []string `json:"actors"`
+	Poster      string   `json:"poster"`
+	SimilarIDs  []string `json:"similar_ids"`
+}
 
 func main() {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
@@ -55,7 +66,6 @@ func main() {
 func createHandler(logger log.Logger) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		w.WriteHeader(http.StatusOK)
 		level.Debug(logger).Log("msg", "new request")
 		amazonID := vars["amazon_id"]
 
@@ -64,11 +74,34 @@ func createHandler(logger log.Logger) func(w http.ResponseWriter, r *http.Reques
 		httpClient := &http.Client{}
 		res, err := httpClient.Do(req)
 		if err != nil {
+			level.Error(logger).Log("msg", "downstream connection", "error", err)
 			writeReply(logger, w, 500, "internal server error")
 			return
 		}
 		defer res.Body.Close()
 
+		parsingMap := map[string][]HtmlNode{
+			"title":        {{1, "div"}, {2, "div"}, {2, "div"}, {1, "div"}, {1, "h1"}, {1, "text"}},
+			"release_year": {{1, "div"}, {2, "div"}, {4, "span"}, {1, "span"}, {1, "text"}},
+			"actor":        {{1, "div"}, {4, "div"}, {1, "div"}, {1, "div"}, {2, "dl"}, {2, "dd"}, {0, "a"}, {1, "text"}},
+			"similar_ids":  {{1, "ul"}, {0, "li"}, {1, "div"}, {1, "div"}, {1, "a"}},
+			"poster":       {{6, "img"}},
+		}
+		parsedTokens, err := HtmlTraverse(res.Body, parsingMap)
+		if err != nil {
+			level.Error(logger).Log("msg", "parsing", "error", err)
+			writeReply(logger, w, 500, "internal server error")
+			return
+		}
+		reply := newReply(parsedTokens)
+
+		jsonString, err := json.Marshal(reply)
+		if err != nil {
+			level.Error(logger).Log("msg", "decoding reply", "error", err)
+			writeReply(logger, w, 500, "internal server error")
+			return
+		}
+		writeReply(logger, w, 200, string(jsonString))
 	}
 }
 
@@ -77,4 +110,45 @@ func writeReply(logger log.Logger, w http.ResponseWriter, statusCode int, messag
 	if _, err := w.Write([]byte(message)); err != nil {
 		level.Error(logger).Log("msg", "writing connection", "error", err)
 	}
+}
+
+func newReply(parsedTokens map[string][]html.Token) Reply {
+	reply := Reply{
+		Actors:     make([]string, 0),
+		SimilarIDs: make([]string, 0),
+	}
+	for k, v := range parsedTokens {
+		for _, token := range v {
+			switch k {
+			case "title":
+				reply.Title = token.Data
+			case "release_year":
+				year, _ := strconv.ParseInt(token.Data, 10, 32)
+				reply.ReleaseYear = int(year)
+			case "actor":
+				reply.Actors = append(reply.Actors, token.Data)
+			case "similar_ids":
+				similarID := parseAmazonID(getAttr(token.Attr, "href"))
+				reply.SimilarIDs = append(reply.SimilarIDs, similarID)
+			case "poster":
+				fmt.Printf("attr: %v\n", token.Attr)
+				reply.Poster = getAttr(token.Attr, "src")
+			}
+		}
+	}
+	return reply
+}
+
+func getAttr(attrs []html.Attribute, key string) string {
+	for _, attr := range attrs {
+		if attr.Key == key {
+			return attr.Val
+		}
+	}
+	return ""
+}
+
+func parseAmazonID(url string) string {
+	chars := []byte(url)
+	return string(chars[17:27])
 }
