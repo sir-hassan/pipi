@@ -8,7 +8,7 @@ clean:
 
 test: clean
 	test -z '$(shell gofmt -l .)'
-	golint -set_exit_status $(PKG_LIST)
+	#golint -set_exit_status $(PKG_LIST)
 	go vet ./...
 	go test ./... -v
 	mkdir -p bin
@@ -17,4 +17,4 @@ test: clean
 
 build: test
 	mkdir -p bin
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/pipi .
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/pipi cmd/*

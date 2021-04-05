@@ -1,4 +1,4 @@
-package main
+package parse
 
 import (
 	"golang.org/x/net/html"
@@ -7,19 +7,32 @@ import (
 )
 
 type HtmlNode struct {
-	Branch int
-	Tag    string
-	Token  html.Token
+	Branch     int
+	Tag        string
+	Token      html.Token
+	Attributes map[string]string
 }
 
-func HtmlTraverse(input io.Reader, searchingMap map[string][]HtmlNode) (map[string][]html.Token, error) {
+type HtmlParser struct {
+	SearchingMap  map[string][]HtmlNode
+	CapturedNodes map[string][]HtmlNode
+}
+
+func NewHtmlParser() *HtmlParser {
+	return &HtmlParser{
+		SearchingMap:  make(map[string][]HtmlNode),
+		CapturedNodes: make(map[string][]HtmlNode),
+	}
+}
+
+func (t *HtmlParser) Capture(fieldName string, path []HtmlNode) {
+	t.SearchingMap[fieldName] = path
+	t.CapturedNodes[fieldName] = make([]HtmlNode, 0)
+}
+
+func (t *HtmlParser) Parse(input io.Reader) error {
 	lastBranch := 0
 	currentPath := make([]HtmlNode, 0)
-
-	parsedTokens := make(map[string][]html.Token)
-	for k, _ := range searchingMap {
-		parsedTokens[k] = make([]html.Token, 0)
-	}
 
 	z := html.NewTokenizer(input)
 	for {
@@ -28,9 +41,9 @@ func HtmlTraverse(input io.Reader, searchingMap map[string][]HtmlNode) (map[stri
 
 		switch {
 		case tokenType == html.ErrorToken && z.Err() == io.EOF:
-			return parsedTokens, nil
+			return nil
 		case tokenType == html.ErrorToken:
-			return nil, z.Err()
+			return z.Err()
 		case tokenType == html.StartTagToken || tokenType == html.TextToken || tokenType == html.SelfClosingTagToken:
 			if tokenType == html.TextToken && strings.TrimSpace(token.Data) == "" {
 				continue
@@ -38,8 +51,8 @@ func HtmlTraverse(input io.Reader, searchingMap map[string][]HtmlNode) (map[stri
 			currentPath = append(currentPath, HtmlNode{Branch: lastBranch + 1, Token: token})
 			lastBranch = 0
 
-			if key := matchSearchingMap(currentPath, searchingMap); key != "" {
-				parsedTokens[key] = append(parsedTokens[key], token)
+			if key := matchSearchingMap(currentPath, t.SearchingMap); key != "" {
+				t.CapturedNodes[key] = append(t.CapturedNodes[key], HtmlNode{Token: token})
 			}
 			if tokenType == html.TextToken || tokenType == html.SelfClosingTagToken {
 				lastTag := currentPath[len(currentPath)-1]
@@ -63,6 +76,17 @@ func matchPath(path []HtmlNode, searchingPath []HtmlNode) bool {
 		}
 		if token.Token.Data != tag.Tag && (tag.Tag != "text" || token.Token.Type != html.TextToken) {
 			return false
+		}
+		if len(tag.Attributes) > 0 {
+			attributes := make(map[string]string)
+			for _, attr := range token.Token.Attr {
+				attributes[attr.Key] = attr.Val
+			}
+			for key, value := range tag.Attributes {
+				if v, ok := attributes[key]; !ok || v != value {
+					return false
+				}
+			}
 		}
 	}
 	return true
