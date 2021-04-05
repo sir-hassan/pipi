@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/mux"
@@ -57,6 +56,25 @@ func createHandler(logger log.Logger) func(w http.ResponseWriter, r *http.Reques
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "amazon_id: %v\n", vars["amazon_id"])
+		level.Debug(logger).Log("msg", "new request")
+		amazonID := vars["amazon_id"]
+
+		req, _ := http.NewRequest("GET", "https://www.amazon.de/gp/product/"+amazonID, nil)
+		req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0")
+		httpClient := &http.Client{}
+		res, err := httpClient.Do(req)
+		if err != nil {
+			writeReply(logger, w, 500, "internal server error")
+			return
+		}
+		defer res.Body.Close()
+
+	}
+}
+
+func writeReply(logger log.Logger, w http.ResponseWriter, statusCode int, message string) {
+	w.WriteHeader(statusCode)
+	if _, err := w.Write([]byte(message)); err != nil {
+		level.Error(logger).Log("msg", "writing connection", "error", err)
 	}
 }
