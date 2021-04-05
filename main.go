@@ -127,17 +127,17 @@ func newReply(parsedTokens map[string][]html.Token) Reply {
 			case "actor":
 				reply.Actors = append(reply.Actors, token.Data)
 			case "similar_ids":
-				similarID := parseAmazonID(getAttr(token.Attr, "href"))
+				similarID := parseAmazonID(getTokenAttribute(token.Attr, "href"))
 				reply.SimilarIDs = append(reply.SimilarIDs, similarID)
 			case "poster":
-				reply.Poster = getAttr(token.Attr, "src")
+				reply.Poster = getTokenAttribute(token.Attr, "src")
 			}
 		}
 	}
 	return reply
 }
 
-func getAttr(attrs []html.Attribute, key string) string {
+func getTokenAttribute(attrs []html.Attribute, key string) string {
 	for _, attr := range attrs {
 		if attr.Key == key {
 			return attr.Val
