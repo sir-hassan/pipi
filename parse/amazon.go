@@ -21,11 +21,11 @@ var _ Parser = AmazonPrimeParser{}
 
 func (a AmazonPrimeParser) Parse(input io.Reader) (interface{}, error) {
 	parser := NewHtmlParser()
-	parser.Capture("title", []HtmlNode{{Branch: 2, Tag: "div"}, {Branch: 0, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "h1"}, {Branch: 1, Tag: "text"}})
+	parser.Capture("title", []HtmlNode{{Tag: "h1", Attributes: map[string]string{"data-automation-id": "title"}}, {Branch: 1, Tag: "text"}})
 	parser.Capture("release_year", []HtmlNode{{Tag: "span", Attributes: map[string]string{"data-automation-id": "release-year-badge"}}, {Tag: "text"}})
-	parser.Capture("actor", []HtmlNode{{Branch: 1, Tag: "div"}, {Branch: 4, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 2, Tag: "dl"}, {Branch: 2, Tag: "dd"}, {Branch: 0, Tag: "a"}, {Branch: 1, Tag: "text"}})
+	parser.Capture("actor", []HtmlNode{{Tag: "div", Attributes: map[string]string{"data-automation-id": "meta-info"}}, {Tag: "div"}, {Branch: 2, Tag: "dl"}, {Branch: 2, Tag: "dd"}, {Branch: 0, Tag: "a"}, {Branch: 1, Tag: "text"}})
 	parser.Capture("similar_ids", []HtmlNode{{Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "a"}})
-	parser.Capture("poster", []HtmlNode{{Branch: 2, Tag: "div"}, {Branch: 3, Tag: "img"}})
+	parser.Capture("poster", []HtmlNode{{Branch: 2, Tag: "div"}, {Tag: "img", Attributes: map[string]string{"id": "atf-full"}}})
 
 	err := parser.Parse(input)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 )
 
 type Error struct {
@@ -28,7 +29,7 @@ type httpClient struct {
 
 var _ Client = &httpClient{}
 
-func NewHttpClient(client *http.Client) *httpClient {
+func NewHttpClient(client *http.Client) Client {
 	return &httpClient{client: client}
 }
 
@@ -44,4 +45,22 @@ func (h httpClient) GetPage(url string) (io.ReadCloser, *Error) {
 		return nil, &Error{StatusCode: res.StatusCode}
 	}
 	return res.Body, nil
+}
+
+type filesClient struct {
+	rootPath string
+}
+
+var _ Client = &filesClient{}
+
+func NewFilesClient(rootPath string) Client {
+	return &filesClient{rootPath: rootPath}
+}
+
+func (c filesClient) GetPage(url string) (io.ReadCloser, *Error) {
+	f, err := os.Open(c.rootPath + "/" + string([]byte(url)[len(url)-10:]))
+	if err != nil {
+		return nil, &Error{StatusCode: 500, Err: err}
+	}
+	return f, nil
 }
