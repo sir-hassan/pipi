@@ -1,3 +1,11 @@
+// `html.Tokenizer` walks through html input text and convert it to sequence on
+// tokens. These tokens reflect their respective html elements and encode their
+// attributes, type and text.
+// We can leverage `html.Tokenizer` to build a simple html searching and
+// parsing logic by just looping though these tokens, keeping track of their
+// paths to the root element(<body/>) and comparing them with a given searching
+// paths.
+
 package parse
 
 import (
@@ -6,11 +14,16 @@ import (
 	"strings"
 )
 
+// HtmlNode can represent an html searching node (used in building searching
+// paths) or an html actual node (used in representing parsed html nodes).
 type HtmlNode struct {
-	Branch     int
+	// Tag, Branch and Attributes fields are used for searching matching nodes.
 	Tag        string
-	Token      html.Token
+	Branch     int
 	Attributes map[string]string
+
+	// Token field represent an actual html token that maps to matching fields.
+	Token html.Token
 }
 
 type HtmlParser struct {
