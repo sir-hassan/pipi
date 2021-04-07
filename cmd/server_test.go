@@ -38,7 +38,7 @@ func TestPiPiHandler(t *testing.T) {
 
 			logger := log.NewNopLogger()
 			path, _ := os.Getwd()
-			client := backend.NewFilesClient(path + "/../test_pages")
+			client := backend.NewLocalPageFetcher(path + "/../test_pages")
 
 			handler := createHandler(logger, client)
 			handler.ServeHTTP(responseRecorder, request)

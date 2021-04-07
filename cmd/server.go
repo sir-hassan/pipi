@@ -27,8 +27,8 @@ func main() {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	level.Info(logger).Log("msg", "starting pipi...")
 
-	client := backend.NewHTTPClient(&http.Client{})
-	handler := createHandler(logger, client)
+	pageFetcher := backend.NewWebPageFetcher(&http.Client{})
+	handler := createHandler(logger, pageFetcher)
 
 	http.Handle("/", handler)
 	level.Info(logger).Log("msg", "listening started", "port", apiPort)
@@ -60,9 +60,9 @@ func main() {
 	}
 }
 
-func createHandler(logger log.Logger, client backend.Client) http.Handler {
+func createHandler(logger log.Logger, pageFetcher backend.PageFetcher) http.Handler {
 	handler := mux.NewRouter()
-	handler.HandleFunc("/movie/amazon/{amazon_id}", createMovieHandleFunc(logger, client))
+	handler.HandleFunc("/movie/amazon/{amazon_id}", createMovieHandleFunc(logger, pageFetcher))
 	handler.NotFoundHandler = http.HandlerFunc(createNotFoundHandleFunc(logger))
 	return handler
 }
@@ -73,7 +73,7 @@ func createNotFoundHandleFunc(logger log.Logger) func(w http.ResponseWriter, r *
 	}
 }
 
-func createMovieHandleFunc(logger log.Logger, client backend.Client) func(w http.ResponseWriter, r *http.Request) {
+func createMovieHandleFunc(logger log.Logger, client backend.PageFetcher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		level.Debug(logger).Log("msg", "new request")

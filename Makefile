@@ -13,6 +13,7 @@ test: clean
 	go test ./... -v
 	mkdir -p bin
 	go test ./... -v --coverprofile bin/coverage.txt
+	go test -race -short $(PKG_LIST)
 	go tool cover -func bin/coverage.txt
 
 build: test

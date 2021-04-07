@@ -5,10 +5,9 @@ WORKDIR /app
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
+RUN go get -u golang.org/x/lint/golint
 COPY . .
 RUN make build
 
-COPY --chown=0:0 --from=builder /app/bin/pipi /app/pipi
-
 WORKDIR /app
-ENTRYPOINT ["/app/pipi"]
+ENTRYPOINT ["/app/bin/pipi"]

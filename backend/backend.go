@@ -7,13 +7,15 @@ import (
 	"os"
 )
 
-// Client is the interface that fetches a web page for a given url.
-type Client interface {
+// PageFetcher is the interface that fetches a web page for a given url. PageFetcher
+// should be safe for concurrent use by multiple goroutines and implementations
+// should respect that.
+type PageFetcher interface {
 	GetPage(url string) (io.ReadCloser, *Error)
 }
 
-// Error represents a Client interface error while retrieving a page.
-// It wrap status code and error.
+// Error represents a PageFetcher interface error while retrieving a page.
+// It wraps status code and error.
 type Error struct {
 	StatusCode int
 	Err        error
@@ -26,25 +28,25 @@ func (e Error) Error() string {
 	return fmt.Sprintf("status: %d, err: %s", e.StatusCode, e.Err)
 }
 
-type httpClient struct {
+type webPageFetcher struct {
 	client *http.Client
 }
 
-var _ Client = &httpClient{}
+var _ PageFetcher = &webPageFetcher{}
 
-// NewHTTPClient creates a new httpClient
-func NewHTTPClient(client *http.Client) Client {
-	return &httpClient{client: client}
+// NewWebPageFetcher creates a new webPageFetcher
+func NewWebPageFetcher(client *http.Client) PageFetcher {
+	return &webPageFetcher{client: client}
 }
 
-func (h httpClient) GetPage(url string) (io.ReadCloser, *Error) {
+func (p webPageFetcher) GetPage(url string) (io.ReadCloser, *Error) {
 	req, _ := http.NewRequest("GET", url, nil)
 
 	// surprisingly this header is enough to let amazon.de think
 	// that you are not a robot.
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0")
 
-	res, err := h.client.Do(req)
+	res, err := p.client.Do(req)
 	if err != nil {
 		return nil, &Error{StatusCode: 500, Err: err}
 	}
@@ -54,19 +56,19 @@ func (h httpClient) GetPage(url string) (io.ReadCloser, *Error) {
 	return res.Body, nil
 }
 
-type filesClient struct {
+type localPageFetcher struct {
 	rootPath string
 }
 
-var _ Client = &filesClient{}
+var _ PageFetcher = &localPageFetcher{}
 
-// NewFilesClient creates new filesClient for testing purposes.
-func NewFilesClient(rootPath string) Client {
-	return &filesClient{rootPath: rootPath}
+// NewLocalPageFetcher creates new localPageFetcher for testing purposes.
+func NewLocalPageFetcher(rootPath string) PageFetcher {
+	return &localPageFetcher{rootPath: rootPath}
 }
 
-func (c filesClient) GetPage(url string) (io.ReadCloser, *Error) {
-	f, err := os.Open(c.rootPath + "/" + string([]byte(url)[len(url)-10:]))
+func (p localPageFetcher) GetPage(url string) (io.ReadCloser, *Error) {
+	f, err := os.Open(p.rootPath + "/" + string([]byte(url)[len(url)-10:]))
 	if err != nil {
 		return nil, &Error{StatusCode: 500, Err: err}
 	}
