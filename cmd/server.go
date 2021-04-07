@@ -18,6 +18,7 @@ import (
 
 const apiPort = 8080
 
+// ErrorReply is used to encode error api response payload.
 type ErrorReply struct {
 	Error string `json:"error"`
 }
@@ -26,7 +27,7 @@ func main() {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	level.Info(logger).Log("msg", "starting pipi...")
 
-	client := backend.NewHttpClient(&http.Client{})
+	client := backend.NewHTTPClient(&http.Client{})
 	handler := createHandler(logger, client)
 
 	http.Handle("/", handler)

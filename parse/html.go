@@ -14,9 +14,9 @@ import (
 	"strings"
 )
 
-// HtmlNode can represent an html searching node (used in building searching
+// HTMLNode can represent an html searching node (used in building searching
 // paths) or an html actual node (used in representing parsed html nodes).
-type HtmlNode struct {
+type HTMLNode struct {
 	// Tag, Branch and Attributes fields are used for searching matching nodes.
 	Tag        string
 	Branch     int
@@ -26,26 +26,34 @@ type HtmlNode struct {
 	Token html.Token
 }
 
-type HtmlParser struct {
-	SearchingMap  map[string][]HtmlNode
-	CapturedNodes map[string][]HtmlNode
+// HTMLParser leverages html.Tokenizer and implements simple html dom parsing
+// logic. You give searching details of html nodes to capture (the dom path, tag
+// type and attributes) then HTMLParser will loop though the document and try
+// to capture the matching nodes.
+type HTMLParser struct {
+	SearchingMap  map[string][]HTMLNode
+	CapturedNodes map[string][]HTMLNode
 }
 
-func NewHtmlParser() *HtmlParser {
-	return &HtmlParser{
-		SearchingMap:  make(map[string][]HtmlNode),
-		CapturedNodes: make(map[string][]HtmlNode),
+// NewHTMLParser creates a new HTMLParser.
+func NewHTMLParser() *HTMLParser {
+	return &HTMLParser{
+		SearchingMap:  make(map[string][]HTMLNode),
+		CapturedNodes: make(map[string][]HTMLNode),
 	}
 }
 
-func (t *HtmlParser) Capture(fieldName string, path []HtmlNode) {
+// Capture records a capturing(searching) rule.
+func (t *HTMLParser) Capture(fieldName string, path []HTMLNode) {
 	t.SearchingMap[fieldName] = path
-	t.CapturedNodes[fieldName] = make([]HtmlNode, 0)
+	t.CapturedNodes[fieldName] = make([]HTMLNode, 0)
 }
 
-func (t *HtmlParser) Parse(input io.Reader) error {
+// Parse runs the parsing loop against the SearchingMap field and recorders
+// the results in CapturedNodes field.
+func (t *HTMLParser) Parse(input io.Reader) error {
 	lastBranch := 0
-	currentPath := make([]HtmlNode, 0)
+	currentPath := make([]HTMLNode, 0)
 
 	z := html.NewTokenizer(input)
 	for {
@@ -61,11 +69,11 @@ func (t *HtmlParser) Parse(input io.Reader) error {
 			if tokenType == html.TextToken && strings.TrimSpace(token.Data) == "" {
 				continue
 			}
-			currentPath = append(currentPath, HtmlNode{Branch: lastBranch + 1, Token: token})
+			currentPath = append(currentPath, HTMLNode{Branch: lastBranch + 1, Token: token})
 			lastBranch = 0
 
 			if key := matchSearchingMap(currentPath, t.SearchingMap); key != "" {
-				t.CapturedNodes[key] = append(t.CapturedNodes[key], HtmlNode{Token: token})
+				t.CapturedNodes[key] = append(t.CapturedNodes[key], HTMLNode{Token: token})
 			}
 			if tokenType == html.TextToken || tokenType == html.SelfClosingTagToken {
 				lastTag := currentPath[len(currentPath)-1]
@@ -80,7 +88,7 @@ func (t *HtmlParser) Parse(input io.Reader) error {
 	}
 }
 
-func matchPath(path []HtmlNode, searchingPath []HtmlNode) bool {
+func matchPath(path []HTMLNode, searchingPath []HTMLNode) bool {
 	for i := 1; i <= len(searchingPath) && i <= len(path); i++ {
 		token := path[len(path)-i]
 		tag := searchingPath[len(searchingPath)-i]
@@ -105,7 +113,7 @@ func matchPath(path []HtmlNode, searchingPath []HtmlNode) bool {
 	return true
 }
 
-func matchSearchingMap(path []HtmlNode, searchingMap map[string][]HtmlNode) string {
+func matchSearchingMap(path []HTMLNode, searchingMap map[string][]HTMLNode) string {
 	for k, v := range searchingMap {
 		if matchPath(path, v) {
 			return k

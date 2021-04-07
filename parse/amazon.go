@@ -6,7 +6,8 @@ import (
 	"strconv"
 )
 
-type AmazonPrimePage struct {
+// AmazonPrimeMovie is used to encode parsed amazon movie.
+type AmazonPrimeMovie struct {
 	Title       string   `json:"title"`
 	ReleaseYear int      `json:"release_year"`
 	Actors      []string `json:"actors"`
@@ -14,18 +15,20 @@ type AmazonPrimePage struct {
 	SimilarIDs  []string `json:"similar_ids"`
 }
 
+// AmazonPrimeParser knows the details of how to parse amazon.de pages.
 type AmazonPrimeParser struct {
 }
 
 var _ Parser = AmazonPrimeParser{}
 
+// Parse runs the parsing logic.
 func (a AmazonPrimeParser) Parse(input io.Reader) (interface{}, error) {
-	parser := NewHtmlParser()
-	parser.Capture("title", []HtmlNode{{Tag: "h1", Attributes: map[string]string{"data-automation-id": "title"}}, {Branch: 1, Tag: "text"}})
-	parser.Capture("release_year", []HtmlNode{{Tag: "span", Attributes: map[string]string{"data-automation-id": "release-year-badge"}}, {Tag: "text"}})
-	parser.Capture("actor", []HtmlNode{{Tag: "div", Attributes: map[string]string{"data-automation-id": "meta-info"}}, {Tag: "div"}, {Branch: 2, Tag: "dl"}, {Branch: 2, Tag: "dd"}, {Branch: 0, Tag: "a"}, {Branch: 1, Tag: "text"}})
-	parser.Capture("similar_ids", []HtmlNode{{Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "a"}})
-	parser.Capture("poster", []HtmlNode{{Branch: 2, Tag: "div"}, {Tag: "img", Attributes: map[string]string{"id": "atf-full"}}})
+	parser := NewHTMLParser()
+	parser.Capture("title", []HTMLNode{{Tag: "h1", Attributes: map[string]string{"data-automation-id": "title"}}, {Branch: 1, Tag: "text"}})
+	parser.Capture("release_year", []HTMLNode{{Tag: "span", Attributes: map[string]string{"data-automation-id": "release-year-badge"}}, {Tag: "text"}})
+	parser.Capture("actor", []HTMLNode{{Tag: "div", Attributes: map[string]string{"data-automation-id": "meta-info"}}, {Tag: "div"}, {Branch: 2, Tag: "dl"}, {Branch: 2, Tag: "dd"}, {Branch: 0, Tag: "a"}, {Branch: 1, Tag: "text"}})
+	parser.Capture("similar_ids", []HTMLNode{{Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "div"}, {Branch: 1, Tag: "a"}})
+	parser.Capture("poster", []HTMLNode{{Branch: 2, Tag: "div"}, {Tag: "img", Attributes: map[string]string{"id": "atf-full"}}})
 
 	err := parser.Parse(input)
 	if err != nil {
@@ -36,8 +39,8 @@ func (a AmazonPrimeParser) Parse(input io.Reader) (interface{}, error) {
 	return page, nil
 }
 
-func newAmazonPrimePage(parsedNodes map[string][]HtmlNode) AmazonPrimePage {
-	page := AmazonPrimePage{
+func newAmazonPrimePage(parsedNodes map[string][]HTMLNode) AmazonPrimeMovie {
+	page := AmazonPrimeMovie{
 		Actors:     make([]string, 0),
 		SimilarIDs: make([]string, 0),
 	}

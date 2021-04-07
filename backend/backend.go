@@ -7,6 +7,13 @@ import (
 	"os"
 )
 
+// Client is the interface that fetches a web page for a given url.
+type Client interface {
+	GetPage(url string) (io.ReadCloser, *Error)
+}
+
+// Error represents a Client interface error while retrieving a page.
+// It wrap status code and error.
 type Error struct {
 	StatusCode int
 	Err        error
@@ -19,22 +26,22 @@ func (e Error) Error() string {
 	return fmt.Sprintf("status: %d, err: %s", e.StatusCode, e.Err)
 }
 
-type Client interface {
-	GetPage(url string) (io.ReadCloser, *Error)
-}
-
 type httpClient struct {
 	client *http.Client
 }
 
 var _ Client = &httpClient{}
 
-func NewHttpClient(client *http.Client) Client {
+// NewHTTPClient creates a new httpClient
+func NewHTTPClient(client *http.Client) Client {
 	return &httpClient{client: client}
 }
 
 func (h httpClient) GetPage(url string) (io.ReadCloser, *Error) {
 	req, _ := http.NewRequest("GET", url, nil)
+
+	// surprisingly this header is enough to let amazon.de think
+	// that you are not a robot.
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:86.0) Gecko/20100101 Firefox/86.0")
 
 	res, err := h.client.Do(req)
@@ -53,6 +60,7 @@ type filesClient struct {
 
 var _ Client = &filesClient{}
 
+// NewFilesClient creates new filesClient for testing purposes.
 func NewFilesClient(rootPath string) Client {
 	return &filesClient{rootPath: rootPath}
 }

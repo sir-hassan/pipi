@@ -8,7 +8,7 @@ clean:
 
 test: clean
 	test -z '$(shell gofmt -l .)'
-	#golint -set_exit_status $(PKG_LIST)
+	golint -set_exit_status $(PKG_LIST)
 	go vet ./...
 	go test ./... -v
 	mkdir -p bin

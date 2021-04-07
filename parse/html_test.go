@@ -25,9 +25,9 @@ func TestHtmlParser(t *testing.T) {
 	</body>
 </html>`
 	input := strings.NewReader(html)
-	parser := NewHtmlParser()
-	parser.Capture("text", []HtmlNode{{Branch: 2, Tag: "body"}, {Branch: 3, Tag: "p"}})
-	parser.Capture("items", []HtmlNode{{Branch: 2, Tag: "div"}, {Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}})
+	parser := NewHTMLParser()
+	parser.Capture("text", []HTMLNode{{Branch: 2, Tag: "body"}, {Branch: 3, Tag: "p"}})
+	parser.Capture("items", []HTMLNode{{Branch: 2, Tag: "div"}, {Branch: 1, Tag: "ul"}, {Branch: 0, Tag: "li"}})
 
 	err := parser.Parse(input)
 	if err != nil {
@@ -63,8 +63,8 @@ func TestHtmlParserBranchSelection(t *testing.T) {
 	</body>
 </html>`
 	input := strings.NewReader(html)
-	parser := NewHtmlParser()
-	parser.Capture("onlySecondItem", []HtmlNode{{Branch: 2, Tag: "div"}, {Branch: 1, Tag: "ul"}, {Branch: 2, Tag: "li"}})
+	parser := NewHTMLParser()
+	parser.Capture("onlySecondItem", []HTMLNode{{Branch: 2, Tag: "div"}, {Branch: 1, Tag: "ul"}, {Branch: 2, Tag: "li"}})
 
 	err := parser.Parse(input)
 	if err != nil {
@@ -97,8 +97,8 @@ func TestHtmlParserMatchAttr(t *testing.T) {
 	</body>
 </html>`
 	input := strings.NewReader(html)
-	parser := NewHtmlParser()
-	parser.Capture("item", []HtmlNode{{Tag: "ul"}, {Tag: "li", Attributes: map[string]string{"data-foo": "bar"}}})
+	parser := NewHTMLParser()
+	parser.Capture("item", []HTMLNode{{Tag: "ul"}, {Tag: "li", Attributes: map[string]string{"data-foo": "bar"}}})
 
 	err := parser.Parse(input)
 	if err != nil {
@@ -113,7 +113,7 @@ func TestHtmlParserMatchAttr(t *testing.T) {
 	}
 }
 
-func printNodesList(nodesList []HtmlNode) string {
+func printNodesList(nodesList []HTMLNode) string {
 	result := ""
 	for _, v := range nodesList {
 		result += fmt.Sprintf("%v ", v.Token)
