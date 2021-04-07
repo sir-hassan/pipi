@@ -20,5 +20,5 @@ jobs:
 
     - name: Test
       run: |
-        go install golang.org/x/lint
+        go install golang.org/x/lint/golint
         make test
